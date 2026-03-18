@@ -4,6 +4,10 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 import os, tempfile
+import importlib, sys, os
+sys.path.insert(0, os.path.dirname(__file__))
+model = importlib.import_module("Model")
+run_pipeline = model.run_pipeline
 
 st.set_page_config(page_title="PKM Veg Shop — Sales Forecast", page_icon="🥦", layout="wide")
 
@@ -50,7 +54,7 @@ if run_btn:
     tmp_path = tmp.name
     with st.spinner("🔄 Running pipeline — ~2 min for 30,000 trees..."):
         try:
-            from model import run_pipeline
+          
             res = run_pipeline(tmp_path, str(next_date_input))
             st.session_state.results = res
             st.success("✅ Done!")
