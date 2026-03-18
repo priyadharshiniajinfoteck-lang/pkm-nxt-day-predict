@@ -4,10 +4,22 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 import os, tempfile
-import importlib, sys, os
-sys.path.insert(0, os.path.dirname(__file__))
-model = importlib.import_module("Model")
-run_pipeline = model.run_pipeline
+import importlib.util, sys, os
+
+# Works on both Windows (local) and Railway (Linux)
+base_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, base_dir)
+
+model_file = None
+for name in os.listdir(base_dir):
+    if name.lower() == 'model.py':
+        model_file = os.path.join(base_dir, name)
+        break
+
+spec = importlib.util.spec_from_file_location("model", model_file)
+mod  = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+run_pipeline = mod.run_pipeline
 
 st.set_page_config(page_title="PKM Veg Shop — Sales Forecast", page_icon="🥦", layout="wide")
 
@@ -54,7 +66,7 @@ if run_btn:
     tmp_path = tmp.name
     with st.spinner("🔄 Running pipeline — ~2 min for 30,000 trees..."):
         try:
-          
+            
             res = run_pipeline(tmp_path, str(next_date_input))
             st.session_state.results = res
             st.success("✅ Done!")
@@ -79,7 +91,9 @@ w         = res['weather']
 sales     = res['sales_raw']
 next_date = res['next_date']
 
-from model import get_season, traffic_index, FESTIVE_WINDOWS
+get_season = mod.get_season
+traffic_index = mod.traffic_index
+FESTIVE_WINDOWS = mod.FESTIVE_WINDOWS
 
 # ══════════════════════════════════════════════════════════
 # SECTION 1 — KPI CARDS
